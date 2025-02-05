@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+final Map<String, String> dummyData= {
+  'vero': '123',
+};
+
 class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -59,7 +63,7 @@ class LoginScreen extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
                   child: TextField(
-                    controller: TextEditingController(text: "john@gmail.com"),
+                    controller: TextEditingController(text: ""),
                     obscureText: false,
                     textAlign: TextAlign.start,
                     maxLines: 1,
@@ -85,7 +89,7 @@ class LoginScreen extends StatelessWidget {
                         borderSide:
                             BorderSide(color: Color(0xff9e9e9e), width: 1),
                       ),
-                      labelText: "Email",
+                      labelText: "Username",
                       labelStyle: TextStyle(
                         fontWeight: FontWeight.w400,
                         fontStyle: FontStyle.normal,
@@ -101,7 +105,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
                 TextField(
-                  controller: TextEditingController(text: "12345678"),
+                  controller: TextEditingController(text: ""),
                   obscureText: true,
                   textAlign: TextAlign.start,
                   maxLines: 1,
@@ -162,7 +166,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                           padding: EdgeInsets.all(16),
                           child: Text(
-                            "masuyk",
+                            "masuk",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
@@ -175,16 +179,6 @@ class LoginScreen extends StatelessWidget {
                         ),
                          ),
                     ],
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.all(0),
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Color(0xffffffff),
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(color: Color(0xff9e9e9e), width: 1),
                   ),
                 ),
               ],
