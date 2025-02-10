@@ -31,16 +31,33 @@ class _PelangganScreenState extends State<PelangganScreen> {
 
   Future<void> _addPelanggan(String namaPelanggan, String alamat, String nomorTelepon) async {
   try {
+    // Cek apakah pelanggan sudah ada berdasarkan nama atau nomor telepon
+    final existingPelanggan = await supabase
+        .from('pelanggan')
+        .select()
+        .or('nama_pelanggan.eq.$namaPelanggan,nomor_telepon.eq.$nomorTelepon');
+
+    if (existingPelanggan.isNotEmpty) {
+      _showError('Pelanggan dengan nama atau nomor telepon ini sudah ada!');
+      return;
+    }
+
+    // Jika tidak ada duplikasi, tambahkan pelanggan baru
     await supabase.from('pelanggan').insert({
       'nama_pelanggan': namaPelanggan,
       'alamat': alamat,
       'nomor_telepon': nomorTelepon,
     });
-    _fetchPelanggan(); // Refresh data pelanggan
+
+    _fetchPelanggan(); // Refresh daftar pelanggan
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pelanggan berhasil ditambahkan')),
+    );
   } catch (e) {
     _showError('Gagal menambahkan pelanggan: $e');
   }
 }
+
 
   Future<void> _updatePelanggan(int id, String namaPelanggan, String alamat, String nomorTelepon) async {
     try {
