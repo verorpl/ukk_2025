@@ -9,6 +9,8 @@ class PelangganScreen extends StatefulWidget {
 class _PelangganScreenState extends State<PelangganScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> pelangganList = [];
+  TextEditingController _searchController = TextEditingController();
+List<Map<String, dynamic>> filteredPelangganList = [];
   bool isLoading = true;
 
   @override
@@ -18,16 +20,17 @@ class _PelangganScreenState extends State<PelangganScreen> {
   }
 
   Future<void> _fetchPelanggan() async {
-    try {
-      final response = await supabase.from('pelanggan').select();
-      setState(() {
-        pelangganList = List<Map<String, dynamic>>.from(response);
-        isLoading = false;
-      });
-    } catch (e) {
-      _showError('An error occurred: $e');
-    }
+  try {
+    final response = await supabase.from('pelanggan').select();
+    setState(() {
+      pelangganList = List<Map<String, dynamic>>.from(response);
+      filteredPelangganList = pelangganList; // Inisialisasi daftar yang difilter
+      isLoading = false;
+    });
+  } catch (e) {
+    _showError('An error occurred: $e');
   }
+}
 
   Future<void> _addPelanggan(String namaPelanggan, String alamat, String nomorTelepon) async {
   try {
@@ -128,6 +131,19 @@ Future<void> _deletePelanggan(int id) async {
   }
 }
 
+void _filterPelanggan(String query) {
+  setState(() {
+    filteredPelangganList = pelangganList.where((pelanggan) {
+      final nama = pelanggan['nama_pelanggan']?.toLowerCase() ?? '';
+      final alamat = pelanggan['alamat']?.toLowerCase() ?? '';
+      final nomor = pelanggan['nomor_telepon']?.toLowerCase() ?? '';
+      return nama.contains(query.toLowerCase()) ||
+             alamat.contains(query.toLowerCase()) ||
+             nomor.contains(query.toLowerCase());
+    }).toList();
+  });
+}
+
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -140,72 +156,99 @@ Future<void> _deletePelanggan(int id) async {
   final TextEditingController alamatController = TextEditingController();
   final TextEditingController nomorTeleponController = TextEditingController();
 
+  String? namaError, alamatError, nomorTeleponError;
+
   showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return AlertDialog(
-      title: const Text('Tambah Pelanggan'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: namaPelangganController,
-              decoration: const InputDecoration(labelText: 'Nama Pelanggan'),
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Tambah Pelanggan'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: namaPelangganController,
+                    decoration: InputDecoration(
+                      labelText: 'Nama Pelanggan',
+                      errorText: namaError, // Menampilkan error dalam warna merah
+                    ),
+                  ),
+                  TextField(
+                    controller: alamatController,
+                    decoration: InputDecoration(
+                      labelText: 'Alamat',
+                      errorText: alamatError,
+                    ),
+                  ),
+                  TextField(
+                    controller: nomorTeleponController,
+                    decoration: InputDecoration(
+                      labelText: 'Nomor Telepon',
+                      errorText: nomorTeleponError,
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                ],
+              ),
             ),
-            TextField(
-              controller: alamatController,
-              decoration: const InputDecoration(labelText: 'Alamat'),
-            ),
-            TextField(
-              controller: nomorTeleponController,
-              decoration: const InputDecoration(labelText: 'Nomor Telepon'),
-              keyboardType: TextInputType.phone,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(); // Tutup dialog
-          },
-          child: const Text('Batal'),
-        ),
-        TextButton(
-          onPressed: () {
-            final String namaPelanggan = namaPelangganController.text.trim();
-            final String alamat = alamatController.text.trim();
-            final String nomorTelepon = nomorTeleponController.text.trim();
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                },
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final String namaPelanggan = namaPelangganController.text.trim();
+                  final String alamat = alamatController.text.trim();
+                  final String nomorTelepon = nomorTeleponController.text.trim();
 
-            if (namaPelanggan.isEmpty) {
-              _showError('Nama pelanggan harus diisi.');
-              return;
-            }
-            if (alamat.isEmpty) {
-              _showError('Alamat harus diisi.');
-              return;
-            }
-            if (nomorTelepon.isEmpty) {
-              _showError('Nomor telepon harus diisi.');
-              return;
-            }
-            if (!RegExp(r'^[0-9]+$').hasMatch(nomorTelepon)) {
-              _showError('Nomor telepon harus berupa angka.');
-              return;
-            }
+                  setState(() {
+                    namaError = namaPelanggan.isEmpty ? 'Nama pelanggan harus diisi' : null;
+                    alamatError = alamat.isEmpty ? 'Alamat harus diisi' : null;
+                    nomorTeleponError = nomorTelepon.isEmpty
+                        ? 'Nomor telepon harus diisi'
+                        : (!RegExp(r'^[0-9]+$').hasMatch(nomorTelepon)
+                            ? 'Nomor telepon harus berupa angka'
+                            : (nomorTelepon.length < 10 ? 'Nomor telepon minimal 10 digit' : null));
+                  });
 
-            _addPelanggan(namaPelanggan, alamat, nomorTelepon);
-            Navigator.of(context).pop(); // Tutup dialog
-          },
-          child: const Text('Tambah'),
-        ),
-      ],
-    );
-  },
-);
+                  // Jika ada error, hentikan proses
+                  if (namaError != null || alamatError != null || nomorTeleponError != null) {
+                    return;
+                  }
+
+                  // **CEK DUPLIKASI PELANGGAN**
+                  final existingPelanggan = await supabase
+                      .from('pelanggan')
+                      .select()
+                      .or('nama_pelanggan.eq.$namaPelanggan,nomor_telepon.eq.$nomorTelepon');
+
+                  if (existingPelanggan.isNotEmpty) {
+                    setState(() {
+                      namaError = 'Pelanggan dengan nama ini sudah ada';
+                      nomorTeleponError = 'Nomor telepon sudah digunakan';
+                    });
+                    return;
+                  }
+
+                  // **TAMBAH PELANGGAN KE DATABASE**
+                  await _addPelanggan(namaPelanggan, alamat, nomorTelepon);
+                  Navigator.of(context).pop(); // Tutup dialog setelah sukses
+                },
+                child: const Text('Tambah'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
-
 
   void _showEditPelangganDialog(int id, String namaPelanggan, String alamat, String nomorTelepon) {
     final TextEditingController namaPelangganController = TextEditingController(text: namaPelanggan);
@@ -266,72 +309,92 @@ Future<void> _deletePelanggan(int id) async {
   }
 
   Widget _buildPelangganTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('ID')),
-          DataColumn(label: Text('Nama Pelanggan')),
-          DataColumn(label: Text('Alamat')),
-          DataColumn(label: Text('Nomor Telepon')),
-          DataColumn(label: Text('Aksi')),
-        ],
-        rows: pelangganList.map((pelanggan) {
-          return DataRow(
-            cells: [
-              DataCell(Text(pelanggan['pelanggan_id'].toString())),
-              DataCell(Text(pelanggan['nama_pelanggan'] ?? 'Unknown')),
-              DataCell(Text(pelanggan['alamat'] ?? 'Unknown')),
-              DataCell(Text(pelanggan['nomor_telepon'] ?? 'Unknown')),
-              DataCell(Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      _showEditPelangganDialog(
-                        pelanggan['pelanggan_id'],
-                        pelanggan['nama_pelanggan'],
-                        pelanggan['alamat'],
-                        pelanggan['nomor_telepon'],
-                      );
-                    },
-                  ),
-                  IconButton(
-  icon: const Icon(Icons.delete, color: Colors.red),
-  onPressed: () {
-    _confirmDeletePelanggan(pelanggan['pelanggan_id']);
-  },
-),
-                ],
-              )),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: DataTable(
+      columns: const [
+        DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Nama Pelanggan')),
+        DataColumn(label: Text('Alamat')),
+        DataColumn(label: Text('Nomor Telepon')),
+        DataColumn(label: Text('Aksi')),
+      ],
+      rows: filteredPelangganList.map((pelanggan) {
+        return DataRow(
+          cells: [
+            DataCell(Text(pelanggan['pelanggan_id'].toString())),
+            DataCell(Text(pelanggan['nama_pelanggan'] ?? 'Unknown')),
+            DataCell(Text(pelanggan['alamat'] ?? 'Unknown')),
+            DataCell(Text(pelanggan['nomor_telepon'] ?? 'Unknown')),
+            DataCell(Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () {
+                    _showEditPelangganDialog(
+                      pelanggan['pelanggan_id'],
+                      pelanggan['nama_pelanggan'],
+                      pelanggan['alamat'],
+                      pelanggan['nomor_telepon'],
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    _confirmDeletePelanggan(pelanggan['pelanggan_id']);
+                  },
+                ),
+              ],
+            )),
+          ],
+        );
+      }).toList(),
+    ),
+  );
+}
+
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : pelangganList.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Tidak ada pelanggan.',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: _buildPelangganTable(),
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : pelangganList.isEmpty
+            ? const Center(
+                child: Text(
+                  'Tidak ada pelanggan.',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddPelangganDialog,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        labelText: 'Cari Pelanggan',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      onChanged: _filterPelanggan,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: _buildPelangganTable(),
+                    ),
+                  ),
+                ],
+              ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _showAddPelangganDialog,
+      child: const Icon(Icons.add),
+    ),
+  );
+}
 }

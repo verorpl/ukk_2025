@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ukk_2025/penjualan.dart';
 import 'login.dart';
 import 'produk.dart';
 import 'pelanggan.dart'; // Tambahkan import pelanggan
@@ -19,13 +20,20 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     ProductScreen(),    // Halaman Produk
     PelangganScreen(),  // Halaman Pelanggan
+    CheckoutScreen(),   // Halaman Checkout
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Kasir", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Kasir",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white, // Ubah teks menjadi putih
+          ),
+        ),
         backgroundColor: const Color(0xff3a57e8),
         actions: [
           IconButton(
@@ -53,6 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'Pelanggan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Penjualan',
           ),
         ],
       ),
