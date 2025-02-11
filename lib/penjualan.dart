@@ -31,21 +31,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _addToCart(Map<String, dynamic> product) {
-    setState(() {
-      final index = cart.indexWhere((item) => item['id'] == product['id']);
+  setState(() {
+    final index = cart.indexWhere((item) => item['id'] == product['id']);
 
-      if (index != -1) {
-        cart[index]['quantity'] += 1;
-      } else {
-        cart.add({
-          'id': product['id'],
-          'nama_produk': product['nama_produk'],
-          'harga': product['harga'],
-          'quantity': 1,
-        });
-      }
-    });
-  }
+    if (index != -1) {
+      // Jika produk sudah ada di keranjang, tambah jumlahnya
+      cart[index]['quantity'] += 1;
+    } else {
+      // Jika produk belum ada di keranjang, tambahkan dengan jumlah awal 1
+      cart.add({
+        'id': product['id'],
+        'nama_produk': product['nama_produk'],
+        'harga': product['harga'],
+        'quantity': 1,
+      });
+    }
+  });
+}
+
 
   void _removeFromCart(int id) {
     setState(() {

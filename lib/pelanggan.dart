@@ -313,7 +313,6 @@ void _filterPelanggan(String query) {
     scrollDirection: Axis.horizontal,
     child: DataTable(
       columns: const [
-        DataColumn(label: Text('ID')),
         DataColumn(label: Text('Nama Pelanggan')),
         DataColumn(label: Text('Alamat')),
         DataColumn(label: Text('Nomor Telepon')),
@@ -322,7 +321,6 @@ void _filterPelanggan(String query) {
       rows: filteredPelangganList.map((pelanggan) {
         return DataRow(
           cells: [
-            DataCell(Text(pelanggan['pelanggan_id'].toString())),
             DataCell(Text(pelanggan['nama_pelanggan'] ?? 'Unknown')),
             DataCell(Text(pelanggan['alamat'] ?? 'Unknown')),
             DataCell(Text(pelanggan['nomor_telepon'] ?? 'Unknown')),
@@ -353,6 +351,7 @@ void _filterPelanggan(String query) {
     ),
   );
 }
+
 
 
   @override
